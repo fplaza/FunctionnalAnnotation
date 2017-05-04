@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<job
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="urn:proactive:jobdescriptor:3.4"
+     xsi:schemaLocation="urn:proactive:jobdescriptor:3.4 http://www.activeeon.com/public_content/schemas/proactive/jobdescriptor/3.4/schedulerjob.xsd"
+    name="IGC vs KEGG pep" 
+    priority="normal"
+    onTaskError="continueJobExecution"
+     maxNumberOfExecution="2">
+  <taskFlow>
+    <task name="Split">
+      <description>
+        <![CDATA[ This task defines some input, here strings to be processed. ]]>
+      </description>
+      <scriptExecutable>
+        <script>
+          <code language="groovy">
+            <![CDATA[
+
+]]>
+          </code>
+        </script>
+      </scriptExecutable>
+      <controlFlow >
+        <replicate>
+          <script>
+            <code language="groovy">
+              <![CDATA[
+runs=50
+]]>
+            </code>
+          </script>
+        </replicate>
+      </controlFlow>
+    </task>
+    <task name="diamond"
+    
+    
+    
+    
+    runAsMe="true" >
+      <description>
+        <![CDATA[ This task will be replicated according to the 'runs' value specified in the replication script.                The replication index is used in each task's instance to select the input. ]]>
+      </description>
+      <depends>
+        <task ref="Split"/>
+      </depends>
+      <parallel numberOfNodes="5">
+        <topology>
+          <singleHostExclusive/>
+        </topology>
+      </parallel>
+      <selection>
+        <script>
+          <code language="groovy">
+            <![CDATA[
+hostname = InetAddress.getLocalHost().getHostName()
+selected = hostname.startsWith("boogy") || hostname.startsWith("xstoocky") || hostname.startsWith("assoopy")
+]]>
+          </code>
+        </script>
+      </selection>
+      <scriptExecutable>
+        <script>
+          <code language="bash">
+            <![CDATA[
+ITER=$((variables_PA_TASK_REPLICATION+1))
+
+rm -rf /scratch/home/fplazaonate/IGC.vs.kegg82
+mkdir /scratch/home/fplazaonate/IGC.vs.kegg82
+
+cp -rpn /projects/biodatabank/blastdb/local /scratch/home/fplazaonate/
+  
+/scratch/home/fplazaonate/local/bin/diamond blastp \
+--query /projects/biodatabank/blastdb/IGC.pep/IGC_${ITER}.faa \
+--db /projects/biodatabank/blastdb/kegg82/kegg82.pep.annotated.dmnd \
+--sensitive --min-score 60 \
+--outfmt 6 --out /scratch/home/fplazaonate/IGC.vs.kegg82/IGC.vs.kegg82.${ITER}.out
+
+cp /scratch/home/fplazaonate/IGC.vs.kegg82/* /projects/biodatabank/blastdb/IGC.vs.kegg82
+]]>
+          </code>
+        </script>
+      </scriptExecutable>
+    </task>
+    <task name="Merge">
+      <description>
+        <![CDATA[ As a merge operation, we simply print the results from previous tasks. ]]>
+      </description>
+      <depends>
+        <task ref="diamond"/>
+      </depends>
+      <scriptExecutable>
+        <script>
+          <code language="bash">
+            <![CDATA[
+
+]]>
+          </code>
+        </script>
+      </scriptExecutable>
+    </task>
+  </taskFlow>
+</job>
