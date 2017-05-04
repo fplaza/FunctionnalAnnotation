@@ -66,17 +66,28 @@ selected = hostname.startsWith("boogy") || hostname.startsWith("xstoocky") || ho
             <![CDATA[
 ITER=$((variables_PA_TASK_REPLICATION+1))
 
+# Crée le répertoire temporaire dans lequel seront stockés temporairement les résultats diamond
 rm -rf /scratch/home/fplazaonate/IGC.vs.kegg82
 mkdir /scratch/home/fplazaonate/IGC.vs.kegg82
 
+
+# Copie le répertoire qui contient l'exécutable diamond
+# Pas nécessaire si la dernière version est dans le path de toutes les machines
 cp -rpn /projects/biodatabank/blastdb/local /scratch/home/fplazaonate/
-  
+
+# Adapter le chemin vers:
+# - l'exécutable diamond
+# - les morceaux du catalogue (--query)
+# - la base données diamond (--db)
+# - le répertoire temporaire où seront stockés les résultats (--out)
 /scratch/home/fplazaonate/local/bin/diamond blastp \
 --query /projects/biodatabank/blastdb/IGC.pep/IGC_${ITER}.faa \
 --db /projects/biodatabank/blastdb/kegg82/kegg82.pep.annotated.dmnd \
 --sensitive --min-score 60 \
 --outfmt 6 --out /scratch/home/fplazaonate/IGC.vs.kegg82/IGC.vs.kegg82.${ITER}.out
 
+# Copie les résultats temporaires dans un dossier partagé
+# Il faut s'assurer que le répertoire de destination existe avant de lancer le job
 cp /scratch/home/fplazaonate/IGC.vs.kegg82/* /projects/biodatabank/blastdb/IGC.vs.kegg82
 ]]>
           </code>
